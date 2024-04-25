@@ -18,14 +18,12 @@ export default class AuthService {
     if (!user) {
       return 'END You are not registered, Register to continue.'
     } else {
-      //start password/pin challange verification
-
-      const isPasswordValid = await hash.verify(user.password, password)
-      console.log(user.password, password, isPasswordValid)
-      if (isPasswordValid) {
+      //start password/pin challange verification      
+      
+      if (await hash.verify(user.password, password)) {
         return successMessage
       } else {
-        return 'END Invalid password. Please try again.'
+        return 'END Invalid login credentials. Please try again.'
       }
     }
   }
@@ -71,11 +69,12 @@ export default class AuthService {
       if (!confirmPIN(response[3], response[4])) {
         return 'END PINs do not match. Please try again.'
       }
+      console.log(response[1], response[2], phoneNumber, response[3].trim())
       return this.createNewUser({
         firstName: response[1],
         lastName: response[2],
         phoneNumber,
-        password: response[3],
+        password: response[3].trim(),
       })
     }
     return 'END Registration failed. Please try again.'

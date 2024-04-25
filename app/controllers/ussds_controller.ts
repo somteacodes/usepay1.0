@@ -12,7 +12,7 @@ export default class UssdsController {
       return new UssdService().startMenu({ sessionId, serviceCode, phoneNumber, text })
     }
     if (text.startsWith('1')) {
-      return 'CON Enter the phone number you want to transfer to\n'
+      return  new WalletService().transferFunds({ sessionId, serviceCode, phoneNumber, text })
     }
     if (text.startsWith('2')) {
       return new WalletService().getWalletBalance({ sessionId, serviceCode, phoneNumber, text })

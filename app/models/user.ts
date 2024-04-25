@@ -7,12 +7,12 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { nanoid } from 'nanoid'
 import Wallet from './wallet.js'
 import type { HasOne } from '@adonisjs/lucid/types/relations'
-const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
-  uids: ['phone_number', 'email'],
-  passwordColumnName: 'password',
-})
+// const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
+//   uids: ['phone_number', 'email'],
+//   passwordColumnName: 'password',
+// })
 
-export default class User extends compose(BaseModel, AuthFinder) {
+export default class User extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
@@ -50,7 +50,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   // hooks
   @beforeCreate()
   static generateUid(user: User) {
-    user.uid = nanoid()
+    user.uid = nanoid(12)
   }
   @beforeSave()
   static async hashPassword(user: User) {

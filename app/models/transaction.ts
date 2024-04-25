@@ -11,6 +11,9 @@ export default class Transaction extends BaseModel {
   declare userId: number
 
   @column()
+  declare otherUserId: number
+
+  @column()
   declare reference: string
 
   @column()
@@ -32,6 +35,6 @@ export default class Transaction extends BaseModel {
   // hooks
   @beforeCreate()
   static generateReference(transaction: Transaction) {
-    transaction.reference = nanoid()
+    transaction.reference = nanoid(12)
   }
 }

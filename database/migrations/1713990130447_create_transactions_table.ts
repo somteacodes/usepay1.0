@@ -7,6 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('other_user_id').unsigned().references('id').inTable('users')
       table.string('reference').notNullable().unique()
       table.integer('amount').notNullable()
       table.enum('type', ['DEBIT', 'CREDIT']).notNullable().defaultTo('DEBIT')
