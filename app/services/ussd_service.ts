@@ -1,5 +1,5 @@
 export default class UssdService {
-  async index({
+  async startMenu({
     sessionId,
     serviceCode,
     phoneNumber,
