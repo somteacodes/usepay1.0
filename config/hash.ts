@@ -10,6 +10,7 @@ const hashConfig = defineConfig({
       parallelization: 1,
       maxMemory: 33554432,
     }),
+    
   },
 })
 

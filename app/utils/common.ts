@@ -20,4 +20,12 @@ function randomUniqueNumbersInRange(
 
   return positions
 }
-export { toSentenceCase, randomUniqueNumbersInRange }
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    
+  }).format(amount)
+}
+export { toSentenceCase, randomUniqueNumbersInRange, formatCurrency }

@@ -1,5 +1,7 @@
+import Wallet from '#models/wallet'
 import AuthService from '#services/auth_service'
 import UssdService from '#services/ussd_service'
+import WalletService from '#services/wallet_service'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class UssdsController {
@@ -13,7 +15,7 @@ export default class UssdsController {
       return 'CON Enter the phone number you want to transfer to\n'
     }
     if (text.startsWith('2')) {
-      return 'END Your balance is 1000\n'
+      return new WalletService().getWalletBalance({ sessionId, serviceCode, phoneNumber, text })
     }
     if (text.startsWith('3')) {
       return new AuthService().registerUser({

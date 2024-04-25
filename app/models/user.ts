@@ -8,7 +8,7 @@ import { nanoid } from 'nanoid'
 import Wallet from './wallet.js'
 import type { HasOne } from '@adonisjs/lucid/types/relations'
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
-  uids: ['phone_number','email'],
+  uids: ['phone_number', 'email'],
   passwordColumnName: 'password',
 })
 
@@ -42,12 +42,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 
-
   // relationships
 
-  @hasOne(()=>Wallet)
-  declare wallet:HasOne<typeof Wallet>
-
+  @hasOne(() => Wallet)
+  declare wallet: HasOne<typeof Wallet>
 
   // hooks
   @beforeCreate()

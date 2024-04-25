@@ -1,6 +1,7 @@
 import User from '#models/user'
 import hash from '@adonisjs/core/services/hash'
 import WalletService from './wallet_service.js'
+import { confirmPIN, containsOnlyAlphabets, validatePIN } from '../utils/validator.js'
 
 export default class AuthService {
   async loginUser(
@@ -18,8 +19,9 @@ export default class AuthService {
       return 'END You are not registered, Register to continue.'
     } else {
       //start password/pin challange verification
-      // const response = request.text.split('*')
-      const isPasswordValid = await this.verifyPassword(password, user.password)
+
+      const isPasswordValid = await hash.verify(user.password, password)
+      console.log(user.password, password, isPasswordValid)
       if (isPasswordValid) {
         return successMessage
       } else {
@@ -48,15 +50,27 @@ export default class AuthService {
       return 'CON Enter your first name\n'
     }
     if (response.length === 2) {
+      if (!containsOnlyAlphabets(response[1])) {
+        return 'END Invalid first name. Please try again.'
+      }
       return 'CON Enter your last name\n'
     }
     if (response.length === 3) {
+      if (!containsOnlyAlphabets(response[2])) {
+        return 'END Invalid last name. Please try again.'
+      }
       return 'CON Create a PIN, must be 6 to 8 digits. \n'
     }
     if (response.length === 4) {
+      if (!validatePIN(response[3])) {
+        return 'END Invalid PIN. Please try again.'
+      }
       return 'CON Confirm your PIN\n'
     }
     if (response.length === 5) {
+      if (!confirmPIN(response[3], response[4])) {
+        return 'END PINs do not match. Please try again.'
+      }
       return this.createNewUser({
         firstName: response[1],
         lastName: response[2],
@@ -68,7 +82,7 @@ export default class AuthService {
   }
 
   async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-    return await hash.verify(password, hashedPassword)
+    return await hash.verify(hashedPassword, password)
   }
 
   async getUserByPhoneNumber(phoneNumber: string): Promise<User | null> {
