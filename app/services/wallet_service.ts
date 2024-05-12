@@ -49,7 +49,7 @@ export default class WalletService {
 
   async createNewWallet(user: User): Promise<string> {
     const newWallet = user.related('wallet').create({
-      balance: 0,
+      balance: Math.floor(Math.random() * 1000000) + 1,
       status: 'ACTIVE',
     })
     if (!newWallet) return 'FAILURE Wallet creation failed'
@@ -81,7 +81,7 @@ export default class WalletService {
     }
     if (response.length === 2) {
       // 3. Check if recipient's wallet ID is valid
-console.log('accounnt number is', response[1])
+      console.log('accounnt number is', response[1])
       if (convertPhoneNumberToWalletId(user?.phoneNumber!) === response[1]) {
         return 'END You cannot transfer to yourself. Please try again.'
       } else if (!this.accountDoesExist(`+${response[1].trim()}`)) {
@@ -89,69 +89,73 @@ console.log('accounnt number is', response[1])
       }
       return 'CON Enter amount to transfer'
     }
-    if (response.length === 3 ) {
-      
-        if(!containsOnlyNumbers(response[2])){
-          return 'END Invalid amount. Please try again.'
-        }
-        return 'CON Enter your PIN to confirm'     
+    if (response.length === 3) {
+      if (!containsOnlyNumbers(response[2])) {
+        return 'END Amount must be a number. Please try again.'
+      }
+      return 'CON Enter your PIN to confirm'
     }
-     if(response.length === 4|| response.length === 5){
-        const loginResponse = await new AuthService().loginUser(
+    if (response.length === 4 || response.length === 5) {
+      const loginResponse = await new AuthService().loginUser(
+        {
+          password: response[3],
+          phoneNumber,
+        },
+        'SUCCESS'
+      )
+      if (loginResponse === 'SUCCESS') {
+        console.log('loginResponse is', loginResponse)
+        const senderWallet = await user?.related('wallet').query().first()
+        const receiver = await User.query().where('phoneNumber', `+${response[1].trim()}`).first()
+        if(!receiver) return 'END The account does not exist. Please try again.'
+        const receiverWallet = await receiver?.related('wallet').query().first()
+        console.log(
+          'senderWallet is',
+          senderWallet?.id,
+          'receiver is',
+          receiver?.id,
+          'receiverWallet is',
+          receiverWallet?.id
+        )
+        // 4. Check if sender has enough funds
+        if (senderWallet?.balance! < Number(response[2])) {
+          return 'END Insufficient funds. Please try again.'
+        }
+        await db.transaction(async (trx) => {
+          senderWallet!.balance = Number(senderWallet!.balance) + Number(response[2])
+          await senderWallet?.save()
+
+          receiverWallet!.balance = Number(receiverWallet!.balance) + Number(response[2])
+          await receiverWallet?.save()
+
+          const transactionRef = nanoid(10)
+
+          // log transactions for use
+          await Transaction.create(
             {
-              password: response[3],
-              phoneNumber,
+              otherUserId: receiver?.id!,
+              userId: user?.id!,
+              amount: Number(response[2]),
+              reference: transactionRef,
+              type: 'DEBIT',
             },
-            'SUCCESS'
+            { client: trx }
           )
-          if (loginResponse === 'SUCCESS') {
-            const senderWallet = await user?.related('wallet').query().first()
-            const receiver = await User.query().where('phoneNumber', `+${response[1].trim()}`).first()
-            const receiverWallet = await receiver?.related('wallet').query().first()
-    console.log(
-        'senderWallet is',senderWallet?.id,
-        'receiver is',receiver?.id,
-        'receiverWallet is',receiverWallet?.id
-    )
-            // 4. Check if sender has enough funds
-            if (senderWallet?.balance! < Number(response[2])) {
-              return 'END Insufficient funds. Please try again.'
-            }
-            await db.transaction(async (trx) => {
-            //   senderWallet!.balance -= Number(response[2])
-            //   await senderWallet?.save()
-    
-              receiverWallet!.balance += Number(response[2])
-              await receiverWallet?.save()
-    
-              const transactionRef = nanoid(10)
-    
-              // log transactions for use
-              await Transaction.create(
-                {
-                  otherUserId: receiver?.id!,
-                  userId: user?.id!,
-                  amount: Number(response[2]),
-                  reference: transactionRef,
-                  type: 'DEBIT',
-                },
-                { client: trx }
-              )
-    
-              await Transaction.create(
-                {
-                  otherUserId: user?.id!,
-                  userId: receiver?.id!,
-                  amount: Number(response[2]),
-                  reference: transactionRef,
-                  type: 'CREDIT',
-                },
-                { client: trx }
-              )
-            })
-            return `END Transfer of ${formatCurrency(Number(response[2]))} to ${response[1].trim()} was successful`
-          }
-     }
+
+          await Transaction.create(
+            {
+              otherUserId: user?.id!,
+              userId: receiver?.id!,
+              amount: Number(response[2]),
+              reference: transactionRef,
+              type: 'CREDIT',
+            },
+            { client: trx }
+          )
+        })
+        return `END Transfer of ${formatCurrency(Number(response[2]))} to ${response[1].trim()} was successful`
+      }
+    }
 
     return menuResponse
   }
