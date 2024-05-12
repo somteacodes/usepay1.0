@@ -9,8 +9,6 @@ import { containsOnlyNumbers } from '../utils/validator.js'
 export default class WalletService {
   async getWalletBalance({
     text,
-    sessionId,
-    serviceCode,
     phoneNumber,
   }: {
     text: string
@@ -57,8 +55,7 @@ export default class WalletService {
   }
 
   async transferFunds({
-    sessionId,
-    serviceCode,
+
     phoneNumber,
     text,
   }: {
